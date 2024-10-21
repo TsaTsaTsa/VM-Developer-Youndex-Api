@@ -6,7 +6,7 @@ import org.example.config.VM;
 import java.io.IOException;
 
 public class App {
-    public static void main(String[] args) throws IOException, InterruptedException {
+    public static void main(String[] args) throws InterruptedException {
         ConfigReader configReader = new ConfigReader();
         VM vmConfig;
         try {
@@ -21,6 +21,7 @@ public class App {
 
         try {
             for (int i = 0; i < vmConfig.getCount(); i++) {
+                System.out.println("Start creating VM " + i);
                 deployer.deployVM(vmConfig, i + 1);
             }
         } catch (IOException e) {
