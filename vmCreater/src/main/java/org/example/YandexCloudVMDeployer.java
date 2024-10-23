@@ -36,11 +36,14 @@ import java.nio.file.Path;
 import java.io.IOException;
 import java.nio.file.Paths;
 import java.time.Duration;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 
 public class YandexCloudVMDeployer {
+    private List<InstanceOuterClass.Instance> instances;
+
     private ServiceFactory Auth() {
         return ServiceFactory.builder()
                 .credentialProvider(Auth.oauthTokenBuilder().fromEnv("OAUTH_TOKEN"))
@@ -88,7 +91,7 @@ public class YandexCloudVMDeployer {
         }
     }
 
-    public void DeployVM(VM vmConfig, int num) throws InterruptedException, InvalidProtocolBufferException {
+    public void deployVM(VM vmConfig, int num) throws InterruptedException, InvalidProtocolBufferException {
         ServiceFactory factory = Auth();
 
         InstanceServiceBlockingStub instanceService = factory.create(InstanceServiceBlockingStub.class, InstanceServiceGrpc::newBlockingStub);
@@ -97,29 +100,34 @@ public class YandexCloudVMDeployer {
 
         // Get latest image
         Image image = imageService.getLatestByFamily(buildGetLatestByFamilyRequest(vmConfig.getImageStandard(), vmConfig.getImageFamily()));
+        for (int i = 0; i < vmConfig.getCount(); i++) {
+            Operation createOperation = instanceService.create(buildCreateInstanceRequest(vmConfig, num, image.getId()));
+            System.out.println("Create instance request sent");
+            // Create instance
 
-        // Create instance
-        Operation createOperation = instanceService.create(buildCreateInstanceRequest(vmConfig, num, image.getId()));
-        System.out.println("Create instance request sent");
+            // Wait for instance creation
+            System.out.println("Wait for instance creation..");
+            String instanceId = createOperation.getMetadata().unpack(CreateInstanceMetadata.class).getInstanceId();
+            OperationUtils.wait(operationService, createOperation, Duration.ofMinutes(5));
+            System.out.printf("Success create VM with id %s%n", instanceId);
+            instances.add(instanceService.get(InstanceServiceOuterClass.GetInstanceRequest.newBuilder()
+                    .setInstanceId(instanceId)
+                    .build()));
+        }
 
-        // Wait for instance creation
-        System.out.println("Wait for instance creation..");
-        String instanceId = createOperation.getMetadata().unpack(CreateInstanceMetadata.class).getInstanceId();
-        OperationUtils.wait(operationService, createOperation, Duration.ofMinutes(5));
-        System.out.printf("Success create VM with id %s%n", instanceId);
+        System.out.println("Checking VMs status...");
 
-        System.out.println("Checking VM status...");
+        for (var instance : instances) {
+            MonitoringVMStatus(instanceService, InstanceServiceOuterClass.GetInstanceRequest.newBuilder()
+                    .setInstanceId(instance.getId())
+                    .build());
 
-        InstanceOuterClass.Instance instance = instanceService.get(InstanceServiceOuterClass.GetInstanceRequest.newBuilder()
-                .setInstanceId(instanceId)
-                .build());
-
-        MonitoringVMStatus(instanceService, InstanceServiceOuterClass.GetInstanceRequest.newBuilder()
-                .setInstanceId(instanceId)
-                .build());
+        }
 
         if (!vmConfig.getCommandsFilePath().isEmpty()) {
-            deployScript(new Deploy(vmConfig.getUserName(), instance.getNetworkInterfaces(0).getPrimaryV4Address().getOneToOneNat().getAddress(),vmConfig.getSshPath(),vmConfig.getCommandsFilePath()));
+            for (var instance: instances) {
+                deployScript(new Deploy(vmConfig.getUserName(), instance.getNetworkInterfaces(0).getPrimaryV4Address().getOneToOneNat().getAddress(), vmConfig.getSshPath(), vmConfig.getCommandsFilePath()));
+            }
         }
     }
 

@@ -32,12 +32,13 @@ public class App {
             try {
                 for (int i = 0; i < vmConfig.getCount(); i++) {
                     System.out.println("Start creating VM " + vmConfig.getPrefix() + (i+1));
-                    deployer.DeployVM(vmConfig, i + 1);
+                    deployer.deployVM(vmConfig, i + 1);
                 }
             } catch (IOException e) {
                 System.out.println("Error while deploying VM: " + e.getMessage());
             }
         }
+
 
         if (deployConfig != null) {
             deployer.deployScript(deployConfig);
