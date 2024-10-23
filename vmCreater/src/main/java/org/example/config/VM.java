@@ -1,7 +1,13 @@
 package org.example.config;
 
 
+import net.schmizz.sshj.SSHClient;
+import net.schmizz.sshj.transport.verification.PromiscuousVerifier;
+import net.schmizz.sshj.userauth.keyprovider.KeyProvider;
 import org.ini4j.Profile;
+
+import java.io.IOException;
+import java.nio.file.Paths;
 
 public class VM {
     private int count;
@@ -18,11 +24,9 @@ public class VM {
     private int diskSize;
     private String subnetId;
     private String userName;
-    private String sshKey;
+    private String sshKeyPath;
+    private String commandsFilePath;
 
-    public VM() {
-
-    }
     public VM(Profile.Section section) {
         setCount(section.get("count"));
         setFolderId(section.get("folder_id"));
@@ -36,7 +40,8 @@ public class VM {
         setImageStandard(section.get("image_standard"));
         setImageFamily(section.get("image_family"));
         setUserName(section.get("user_name"));
-        setSshKey(section.get("ssh_key"));
+        setSshKeyPath(section.get("path_ssh"));
+        setCommandsFilePath(section.get("commands_file_path"));
     }
 
     public int getCount() {
@@ -48,13 +53,13 @@ public class VM {
         try {
             count = Integer.parseInt(user_count);
         } catch (NumberFormatException e) {
-            throw new NumberFormatException("[INFO] Invalid user vm count");
+            throw new NumberFormatException("[ERROR] Invalid user vm count");
         }
 
         if (count > 0 && count <= 10) {
             this.count = count;
         } else {
-            throw new NumberFormatException("[INFO] Invalid user vm count");
+            throw new NumberFormatException("[ERROR] Count must be less than 10 or greater than 0");
         }
     }
 
@@ -126,7 +131,7 @@ public class VM {
         return imageStandard;
     }
 
-    protected void setImageStandard(String imageStandard) {
+    private void setImageStandard(String imageStandard) {
         this.imageStandard = imageStandard;
     }
 
@@ -134,23 +139,40 @@ public class VM {
         return userName;
     }
 
-    public void setUserName(String userName) {
+    private void setUserName(String userName) {
         this.userName = userName;
     }
 
-    public String getSshKey() {
-        return sshKey;
+    public String getSshPath() {
+        return this.sshKeyPath;
     }
 
-    public void setSshKey(String sshKey) {
-        this.sshKey = sshKey;
+    public KeyProvider getSshKey() {
+        try (SSHClient ssh = new SSHClient()) {
+            return ssh.loadKeys(Paths.get(this.sshKeyPath).toString());
+        } catch (IOException e) {
+            System.err.println("Error loading SSH key: " + e.getMessage());
+        }
+        return null;
+    }
+
+    private void setSshKeyPath(String sshKeyPath) {
+        this.sshKeyPath = sshKeyPath;
     }
 
     public String getImageFamily() {
         return ImageFamily;
     }
 
-    public void setImageFamily(String imageFamily) {
+    private void setImageFamily(String imageFamily) {
         ImageFamily = imageFamily;
+    }
+
+    public String getCommandsFilePath() {
+        return commandsFilePath;
+    }
+
+    private void setCommandsFilePath(String commandsFilePath) {
+        this.commandsFilePath = commandsFilePath;
     }
 }
