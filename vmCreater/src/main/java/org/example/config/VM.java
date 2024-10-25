@@ -2,36 +2,45 @@ package org.example.config;
 
 
 import net.schmizz.sshj.SSHClient;
-import net.schmizz.sshj.transport.verification.PromiscuousVerifier;
 import net.schmizz.sshj.userauth.keyprovider.KeyProvider;
 import org.ini4j.Profile;
 
 import java.io.IOException;
 import java.nio.file.Paths;
+import java.util.Objects;
 
 public class VM {
-    private int count;
-    private String folderId;
     private String prefix;
-    private String zoneId;
     private String platformId;
     private int core;
     // в гигабайтах (2, 4, ..)
     private int memory;
-    private String imageStandard;
-    private String ImageFamily;
     // в гигабайтах
+    private String sshKeyPath;
     private int diskSize;
+    private String imageStandard;
+    private String imageFamily;
     private String subnetId;
     private String userName;
-    private String sshKeyPath;
     private String commandsFilePath;
+    private Boolean assignPublicIp;
+
+    public VM(String prefix, String platformId, int core, int memory, String sshKeyPath, int diskSize, String imageStandard, String imageFamily, String subnetId, String userName, Boolean assignPublicIp) {
+        setPrefix(prefix);
+        setPlatformId(platformId);
+        setCore(core);
+        setMemory(memory);
+        setSshKeyPath(sshKeyPath);
+        setDiskSize(diskSize);
+        setImageStandard(imageStandard);
+        setImageFamily(imageFamily);
+        setSubnetId(subnetId);
+        setUserName(userName);
+        setAssignPublicIp(assignPublicIp);
+    }
 
     public VM(Profile.Section section) {
-        setCount(section.get("count"));
-        setFolderId(section.get("folder_id"));
         setPrefix(section.get("prefix"));
-        setZoneId(section.get("zone_id"));
         setPlatformId(section.get("platform_id"));
         setCore(Integer.parseInt(section.get("core")));
         setMemory(Integer.parseInt(section.get("memory")));
@@ -44,25 +53,6 @@ public class VM {
         setCommandsFilePath(section.get("commands_file_path"));
     }
 
-    public int getCount() {
-        return count;
-    }
-
-    protected void setCount(String user_count) throws NumberFormatException {
-        int count;
-        try {
-            count = Integer.parseInt(user_count);
-        } catch (NumberFormatException e) {
-            throw new NumberFormatException("[ERROR] Invalid user vm count");
-        }
-
-        if (count > 0 && count <= 10) {
-            this.count = count;
-        } else {
-            throw new NumberFormatException("[ERROR] Count must be less than 10 or greater than 0");
-        }
-    }
-
     public String getPrefix() {
         return prefix;
     }
@@ -73,22 +63,6 @@ public class VM {
 
     protected void setPrefix(String prefix) {
         this.prefix = prefix;
-    }
-
-    public String getFolderId() {
-        return folderId;
-    }
-
-    protected void setFolderId(String folderId) {
-        this.folderId = folderId;
-    }
-
-    public String getZoneId() {
-        return zoneId;
-    }
-
-    protected void setZoneId(String zoneId) {
-        this.zoneId = zoneId;
     }
 
     public String getPlatformId() {
@@ -123,7 +97,7 @@ public class VM {
         return subnetId;
     }
 
-    protected void setSubnetId(String subnetId) {
+    public void setSubnetId(String subnetId) {
         this.subnetId = subnetId;
     }
 
@@ -161,11 +135,11 @@ public class VM {
     }
 
     public String getImageFamily() {
-        return ImageFamily;
+        return imageFamily;
     }
 
     private void setImageFamily(String imageFamily) {
-        ImageFamily = imageFamily;
+        this.imageFamily = imageFamily;
     }
 
     public String getCommandsFilePath() {
@@ -174,5 +148,13 @@ public class VM {
 
     private void setCommandsFilePath(String commandsFilePath) {
         this.commandsFilePath = commandsFilePath;
+    }
+
+    public Boolean getAssignPublicIp() {
+        return assignPublicIp;
+    }
+
+    public void setAssignPublicIp(Boolean assignPublicIp) {
+        this.assignPublicIp = assignPublicIp;
     }
 }

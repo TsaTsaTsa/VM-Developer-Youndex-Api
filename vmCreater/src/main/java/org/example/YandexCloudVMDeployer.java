@@ -6,6 +6,7 @@ import net.schmizz.sshj.connection.channel.direct.Session;
 import net.schmizz.sshj.transport.verification.PromiscuousVerifier;
 import net.schmizz.sshj.userauth.keyprovider.KeyProvider;
 import org.example.config.Deploy;
+import org.example.config.General;
 import org.example.config.VM;
 import yandex.cloud.api.compute.v1.ImageOuterClass.Image;
 import yandex.cloud.api.compute.v1.ImageServiceGrpc;
@@ -42,9 +43,13 @@ import java.util.concurrent.TimeUnit;
 
 
 public class YandexCloudVMDeployer {
-    private List<InstanceOuterClass.Instance> instances;
+    private InstanceServiceBlockingStub instanceService;
+    private OperationServiceBlockingStub operationService;
+    ImageServiceBlockingStub imageService;
 
-    private ServiceFactory Auth() {
+    private List<InstanceOuterClass.Instance> instances = new ArrayList<>();
+
+    protected static ServiceFactory Auth() {
         return ServiceFactory.builder()
                 .credentialProvider(Auth.oauthTokenBuilder().fromEnv("OAUTH_TOKEN"))
                 .requestTimeout(Duration.ofMinutes(1))
@@ -58,23 +63,40 @@ public class YandexCloudVMDeployer {
                 .build();
     }
 
-    private static CreateInstanceRequest buildCreateInstanceRequest(VM vmConfig, int num, String imageId) {
-        return CreateInstanceRequest.newBuilder()
-                .setFolderId(vmConfig.getFolderId())
+    private static CreateInstanceRequest buildCreateInstanceRequest(General generalConfig, VM vmConfig, int num, String imageId) {
+        CreateInstanceRequest.Builder requestBuilder = CreateInstanceRequest.newBuilder()
+                .setFolderId(generalConfig.getFolderId())
                 .setName(vmConfig.getPrefix() + num)
-                .setZoneId(vmConfig.getZoneId())
+                .setZoneId(generalConfig.getZoneId())
                 .setPlatformId(vmConfig.getPlatformId())
                 .setResourcesSpec(ResourcesSpec.newBuilder().setCores(vmConfig.getCore()).setMemory(vmConfig.getMemory() * 1024L * 1024L * 1024L))
                 .setBootDiskSpec(AttachedDiskSpec.newBuilder()
                         .setDiskSpec(DiskSpec.newBuilder()
                                 .setImageId(imageId)
-                                .setSize(vmConfig.getDiskSize() * 1024L * 1024L * 1024L)))
-                .addNetworkInterfaceSpecs(NetworkInterfaceSpec.newBuilder()
-                        .setSubnetId(vmConfig.getSubnetId())
-                        .setPrimaryV4AddressSpec(PrimaryAddressSpec.newBuilder()
-                                .setOneToOneNatSpec(InstanceServiceOuterClass.OneToOneNatSpec.newBuilder().setIpVersion(InstanceOuterClass.IpVersion.IPV4).build()).build()))
-                .putMetadata("user-data", String.format("#cloud-config\nusers:\n  - name: %s\n    sudo: ['ALL=(ALL) NOPASSWD:ALL']\n    ssh-authorized-keys:\n      - %s", vmConfig.getUserName(), vmConfig.getSshKey()))
-                .build();
+                                .setSize(vmConfig.getDiskSize() * 1024L * 1024L * 1024L)));
+
+        NetworkInterfaceSpec.Builder networkInterfaceBuilder = NetworkInterfaceSpec.newBuilder()
+                .setSubnetId(vmConfig.getSubnetId());
+
+        // Добавление публичного IP в зависимости от значения флага
+        if (vmConfig.getAssignPublicIp()) {
+            networkInterfaceBuilder.setPrimaryV4AddressSpec(
+                    PrimaryAddressSpec.newBuilder()
+                            .setOneToOneNatSpec(
+                                    InstanceServiceOuterClass.OneToOneNatSpec.newBuilder()
+                                            .setIpVersion(InstanceOuterClass.IpVersion.IPV4)
+                                            .build())
+                            .build());
+        } else {
+            // Указываем внутренний IPv4-адрес
+            networkInterfaceBuilder.setPrimaryV4AddressSpec(PrimaryAddressSpec.newBuilder().build());
+        }
+
+        requestBuilder.addNetworkInterfaceSpecs(networkInterfaceBuilder);
+
+        requestBuilder.putMetadata("user-data", String.format("#cloud-config\nusers:\n  - name: %s\n    sudo: ['ALL=(ALL) NOPASSWD:ALL']\n    ssh-authorized-keys:\n      - %s", vmConfig.getUserName(), vmConfig.getSshKey()));
+
+        return requestBuilder.build();
     }
 
     public void MonitoringVMStatus(InstanceServiceBlockingStub instanceService, InstanceServiceOuterClass.GetInstanceRequest request) {
@@ -91,49 +113,60 @@ public class YandexCloudVMDeployer {
         }
     }
 
-    public void deployVM(VM vmConfig, int num) throws InterruptedException, InvalidProtocolBufferException {
-        ServiceFactory factory = Auth();
-
-        InstanceServiceBlockingStub instanceService = factory.create(InstanceServiceBlockingStub.class, InstanceServiceGrpc::newBlockingStub);
-        OperationServiceBlockingStub operationService = factory.create(OperationServiceBlockingStub.class, OperationServiceGrpc::newBlockingStub);
-        ImageServiceBlockingStub imageService = factory.create(ImageServiceBlockingStub.class, ImageServiceGrpc::newBlockingStub);
-
-        // Get latest image
-        Image image = imageService.getLatestByFamily(buildGetLatestByFamilyRequest(vmConfig.getImageStandard(), vmConfig.getImageFamily()));
-        for (int i = 0; i < vmConfig.getCount(); i++) {
-            Operation createOperation = instanceService.create(buildCreateInstanceRequest(vmConfig, num, image.getId()));
-            System.out.println("Create instance request sent");
-            // Create instance
-
-            // Wait for instance creation
-            System.out.println("Wait for instance creation..");
-            String instanceId = createOperation.getMetadata().unpack(CreateInstanceMetadata.class).getInstanceId();
-            OperationUtils.wait(operationService, createOperation, Duration.ofMinutes(5));
-            System.out.printf("Success create VM with id %s%n", instanceId);
-            instances.add(instanceService.get(InstanceServiceOuterClass.GetInstanceRequest.newBuilder()
-                    .setInstanceId(instanceId)
-                    .build()));
-        }
-
+    private void checkVMStatuses(InstanceServiceBlockingStub instanceService) {
         System.out.println("Checking VMs status...");
-
         for (var instance : instances) {
             MonitoringVMStatus(instanceService, InstanceServiceOuterClass.GetInstanceRequest.newBuilder()
                     .setInstanceId(instance.getId())
                     .build());
 
         }
+    }
 
+    private void deployingScriptOnVM(VM vmConfig) throws InterruptedException {
         if (!vmConfig.getCommandsFilePath().isEmpty()) {
-            for (var instance: instances) {
+            for (var instance : instances) {
                 deployScript(new Deploy(vmConfig.getUserName(), instance.getNetworkInterfaces(0).getPrimaryV4Address().getOneToOneNat().getAddress(), vmConfig.getSshPath(), vmConfig.getCommandsFilePath()));
             }
         }
     }
 
+    private void creatingVM(General generalConfig, VM vmConfig, int num, Image image) throws InvalidProtocolBufferException, InterruptedException {
+        Operation createOperation = instanceService.create(buildCreateInstanceRequest(generalConfig, vmConfig, num, image.getId()));
+        System.out.println("Create instance request sent");
+
+        // Wait for instance creation
+        System.out.println("Wait for instance creation..");
+        String instanceId = createOperation.getMetadata().unpack(CreateInstanceMetadata.class).getInstanceId();
+        OperationUtils.wait(operationService, createOperation, Duration.ofMinutes(5));
+
+        System.out.printf("Success create VM with id %s%n", instanceId);
+        instances.add(instanceService.get(InstanceServiceOuterClass.GetInstanceRequest.newBuilder()
+                .setInstanceId(instanceId)
+                .build()));
+    }
+
+    public void deployVM(General generalConfig, VM vmConfig) throws InterruptedException, InvalidProtocolBufferException {
+        ServiceFactory factory = Auth();
+
+        instanceService = factory.create(InstanceServiceBlockingStub.class, InstanceServiceGrpc::newBlockingStub);
+        operationService = factory.create(OperationServiceBlockingStub.class, OperationServiceGrpc::newBlockingStub);
+        imageService = factory.create(ImageServiceBlockingStub.class, ImageServiceGrpc::newBlockingStub);
+
+        // Get latest image
+        Image image = imageService.getLatestByFamily(buildGetLatestByFamilyRequest(vmConfig.getImageStandard(), vmConfig.getImageFamily()));
+        for (int i = 0; i < generalConfig.getVmCount(); i++) {
+            System.out.println("\nStart creating VM " + vmConfig.getPrefix() + (i + 1));
+            creatingVM(generalConfig, vmConfig, (i + 1), image);
+        }
+
+        checkVMStatuses(instanceService);
+        deployingScriptOnVM(vmConfig);
+    }
+
     public void deployScript(Deploy deployConfig) throws InterruptedException {
         System.out.println("Start deploying script...");
-        Path privateKeyPath = Paths.get("C:/Users/User/.ssh/id_rsa");
+        Path privateKeyPath = Paths.get(deployConfig.getSshPath());
         int attempts = 0;
         boolean isConnected = false;
         System.out.println("Try connecting to vm");
@@ -145,7 +178,7 @@ public class YandexCloudVMDeployer {
                 ssh.addHostKeyVerifier(new PromiscuousVerifier());
                 ssh.connect(deployConfig.getHost());
 
-                KeyProvider keyProvider = ssh.loadKeys(privateKeyPath.toString()); //
+                KeyProvider keyProvider = ssh.loadKeys(privateKeyPath.toString());
                 ssh.authPublickey(deployConfig.getUserName(), keyProvider);
 
                 List<String> commands = deployConfig.getCommands();

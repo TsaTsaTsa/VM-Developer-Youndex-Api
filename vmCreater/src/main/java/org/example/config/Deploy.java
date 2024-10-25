@@ -47,6 +47,7 @@ public class Deploy {
 
     private void setCommands(String filePath) {
         this.commands = new FileReader().readFile(filePath);
+
     }
 
     public String getSshPath() {
