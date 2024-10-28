@@ -1,4 +1,4 @@
-package org.example;
+package edu.hse.tsantsaridi.utils;
 
 import java.io.BufferedReader;
 import java.io.IOException;

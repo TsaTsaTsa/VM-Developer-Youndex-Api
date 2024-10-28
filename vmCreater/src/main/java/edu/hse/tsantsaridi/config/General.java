@@ -1,4 +1,4 @@
-package org.example.config;
+package edu.hse.tsantsaridi.config;
 
 import org.ini4j.Profile;
 
@@ -12,6 +12,8 @@ public class General {
         setFolderId(section.get("folder_id"));
         setZoneId(section.get("zone_id"));
     }
+
+    public General() {}
 
     public int getVmCount() {
         return vmCount;

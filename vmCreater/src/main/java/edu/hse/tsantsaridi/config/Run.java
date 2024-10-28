@@ -1,27 +1,27 @@
-package org.example.config;
+package edu.hse.tsantsaridi.config;
 
-import org.example.FileReader;
+import edu.hse.tsantsaridi.utils.FileReader;
 import org.ini4j.Profile;
 
 import java.util.List;
 
-public class Deploy {
+public class Run {
     private String userName;
     private String host;
-    private String sshPath;
+    private String sshPrivatePath;
     private List<String> commands;
 
-    public Deploy(Profile.Section section) {
+    public Run(Profile.Section section) {
         setUserName(section.get("user_name"));
         setHost(section.get("host"));
-        setSshPath(section.get("ssh_path"));
+        setSshPrivatePath(section.get("ssh_private_path"));
         setCommands(section.get("commands"));
     }
 
-    public Deploy(String userName, String host, String ssh_path, String filePath) {
+    public Run(String userName, String host, String ssh_path, String filePath) {
         setUserName(userName);
         setHost(host);
-        setSshPath(ssh_path);
+        setSshPrivatePath(ssh_path);
         setCommands(filePath);
     }
 
@@ -50,11 +50,11 @@ public class Deploy {
 
     }
 
-    public String getSshPath() {
-        return sshPath;
+    public String getSshPrivatePath() {
+        return sshPrivatePath;
     }
 
-    private void setSshPath(String sshPath) {
-        this.sshPath = sshPath;
+    private void setSshPrivatePath(String sshPrivatePath) {
+        this.sshPrivatePath = sshPrivatePath;
     }
 }

@@ -1,13 +1,12 @@
-package org.example.config;
+package edu.hse.tsantsaridi.config;
 
 
-import net.schmizz.sshj.SSHClient;
-import net.schmizz.sshj.userauth.keyprovider.KeyProvider;
 import org.ini4j.Profile;
 
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Objects;
 
 public class VM {
     private String prefix;
@@ -16,28 +15,15 @@ public class VM {
     // в гигабайтах (2, 4, ..)
     private int memory;
     // в гигабайтах
-    private String sshKeyPath;
     private int diskSize;
+    private String sshKeyPublicPath;
     private String imageStandard;
+    private String imageId;
     private String imageFamily;
     private String subnetId;
     private String userName;
     private String commandsFilePath;
     private Boolean assignPublicIp;
-
-    public VM(String prefix, String platformId, int core, int memory, String sshKeyPath, int diskSize, String imageStandard, String imageFamily, String subnetId, String userName, Boolean assignPublicIp) {
-        setPrefix(prefix);
-        setPlatformId(platformId);
-        setCore(core);
-        setMemory(memory);
-        setSshKeyPath(sshKeyPath);
-        setDiskSize(diskSize);
-        setImageStandard(imageStandard);
-        setImageFamily(imageFamily);
-        setSubnetId(subnetId);
-        setUserName(userName);
-        setAssignPublicIp(assignPublicIp);
-    }
 
     public VM(Profile.Section section) {
         setPrefix(section.get("prefix"));
@@ -47,10 +33,12 @@ public class VM {
         setDiskSize(Integer.parseInt(section.get("disk_size")));
         setSubnetId(section.get("subnet_id"));
         setImageStandard(section.get("image_standard"));
+        setImageId(section.get("image_id"));
         setImageFamily(section.get("image_family"));
         setUserName(section.get("user_name"));
-        setSshKeyPath(section.get("path_ssh"));
+        setSshKeyPublicPath(section.get("path_public_ssh"));
         setCommandsFilePath(section.get("commands_file_path"));
+        setAssignPublicIp(true);
     }
 
     public String getPrefix() {
@@ -118,20 +106,21 @@ public class VM {
     }
 
     public String getSshPath() {
-        return this.sshKeyPath;
+        return this.sshKeyPublicPath;
     }
 
-    public KeyProvider getSshKey() {
-        try (SSHClient ssh = new SSHClient()) {
-            return ssh.loadKeys(Paths.get(this.sshKeyPath).toString());
+    private void setSshKeyPublicPath(String sshKeyPublicPath) {
+        this.sshKeyPublicPath = sshKeyPublicPath;
+    }
+
+    public String getSshPublicKey() {
+        Path path = Paths.get(getSshPath());
+        try {
+            return Files.readString(path);
         } catch (IOException e) {
-            System.err.println("Error loading SSH key: " + e.getMessage());
+            System.err.println("[ERROR] Error reading public SSH key: " + e.getMessage());
         }
         return null;
-    }
-
-    private void setSshKeyPath(String sshKeyPath) {
-        this.sshKeyPath = sshKeyPath;
     }
 
     public String getImageFamily() {
@@ -156,5 +145,13 @@ public class VM {
 
     public void setAssignPublicIp(Boolean assignPublicIp) {
         this.assignPublicIp = assignPublicIp;
+    }
+
+    public String getImageId() {
+        return imageId;
+    }
+
+    public void setImageId(String imageId) {
+        this.imageId = imageId;
     }
 }
