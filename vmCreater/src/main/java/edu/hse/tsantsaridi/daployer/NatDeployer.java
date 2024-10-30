@@ -8,7 +8,11 @@ import edu.hse.tsantsaridi.creator.SecurityGroupCreator;
 import edu.hse.tsantsaridi.manager.NetworkManager;
 import edu.hse.tsantsaridi.manager.VMManager;
 
+import java.util.List;
+
 public class NatDeployer {
+    private static final String SEPARATOR_LINE = "-------------------------------------------------------";
+
     private void networkDeployer(Nat natConf, Configuration config) throws InvalidProtocolBufferException, InterruptedException {
         NetworkCreator nc = new NetworkCreator();
         if (natConf.getNetwork() != null) {
@@ -30,6 +34,11 @@ public class NatDeployer {
         }
     }
 
+    private void runUserCommandOnNat(VM natInstance, String natPublicIp) throws InterruptedException {
+        ScriptRunner runner = new ScriptRunner();
+        runner.runScript(new Run(natInstance.getUserName(), natPublicIp, natInstance.getSshKeyPrivatePath(), natInstance.getCommandsFilePath()));
+    }
+
     public void deploy(Configuration config) throws InvalidProtocolBufferException, InterruptedException {
         Nat natConf = config.getNatConf();
         // Содание сети и 2-х подсетей
@@ -41,20 +50,31 @@ public class NatDeployer {
 
         VMDeployer vmDeployer = new VMDeployer();
         // Развертывание виртуальных машин без публичного IP
-        System.out.println("[INFO] Createing VM with private IP");
+        System.out.println(SEPARATOR_LINE);
+        System.out.println("[INFO] Creating VM with private IP...");
         config.getVmConf().setAssignPublicIp(false);
-        vmDeployer.deploy(config.getGeneralConf().getVmCount(), config.getGeneralConf(), config.getVmConf());
-
-        System.out.println("[INFO] Creating Nat-instance");
+        List<String> instancesId = vmDeployer.deploy(config.getGeneralConf().getVmCount(), config.getGeneralConf(), config.getVmConf());
+        System.out.println(SEPARATOR_LINE);
+        System.out.println("[INFO] Creating Nat-instance...");
         // Развертывание Nat-инстанса
         String natInstanceId = (vmDeployer.deploy(1, config.getGeneralConf(), natConf.getNatInstance())).getFirst();
 
+        System.out.println(SEPARATOR_LINE);
+        System.out.println("[INFO] Creating route table...");
         RouteTableCreator rtc = new RouteTableCreator();
         rtc.createRouterTable(config.getGeneralConf(), new VMManager().getPrivateIp(natInstanceId), config.getNatConf().getRouteTable());
 
+        System.out.println(SEPARATOR_LINE);
         NetworkManager nm = new NetworkManager();
         nm.attachRouteTableToSubnet(config.getNatConf().getRouteTable(), config.getNatConf().getPrivateSubnet());
 
-        System.out.println("\n[INFO] Routing through the NAT instance is configured successfully");
+        System.out.println(SEPARATOR_LINE);
+        nm.makePortForwarding(natConf.getPortForwarding(), nm.getPrivateIps(instancesId), natConf.getNatInstance(), new VMManager().getPublicIp(natInstanceId));
+
+        System.out.println("[INFO] Routing through the NAT instance is configured successfully");
+
+        if (natConf.getNatInstance().getCommandsFilePath() != null) {
+            runUserCommandOnNat(natConf.getNatInstance(), new VMManager().getPublicIp(natInstanceId));
+        }
     }
 }

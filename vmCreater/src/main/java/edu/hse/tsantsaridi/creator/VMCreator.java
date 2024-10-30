@@ -18,6 +18,7 @@ public class VMCreator {
     private static final long GB = 1024 * 1024 * 1024L;
 
     public String creat(General generalConfig, VM vmConfig) throws InvalidProtocolBufferException, InterruptedException {
+        System.out.println("\n[INFO] Start creating VM...");
         if (vmConfig.getImageStandard() != null) {
             vmConfig.setImageId(authService.getImageService().getLatestByFamily(buildGetLatestByFamilyRequest(vmConfig.getImageStandard(), vmConfig.getImageFamily())).getId());
         }
@@ -29,7 +30,7 @@ public class VMCreator {
         System.out.println("[INFO] Wait for instance creation..");
         String instanceId = createOperation.getMetadata().unpack(InstanceServiceOuterClass.CreateInstanceMetadata.class).getInstanceId();
         OperationUtils.wait(authService.getOperationService(), createOperation, Duration.ofMinutes(5));
-        System.out.printf("[INFO] Success create VM with ID %s%n", instanceId);
+        System.out.printf("[INFO] VM with ID %s created successfully%n", instanceId);
 
         return instanceId;
     }

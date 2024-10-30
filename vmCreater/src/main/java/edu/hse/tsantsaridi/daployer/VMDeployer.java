@@ -13,17 +13,16 @@ public class VMDeployer {
     public List<String> deploy(int count, General generalConfig, VM vm) throws InvalidProtocolBufferException, InterruptedException {
         VMCreator vmc = new VMCreator();
 
-        List<String> instanceId = new ArrayList<>();
+        List<String> instancesId = new ArrayList<>();
         for (int i = 0; i < count; i++) {
-            System.out.println("\n[INFO] Start creating VM...");
-            instanceId.add(vmc.creat(generalConfig, vm));
+            instancesId.add(vmc.creat(generalConfig, vm));
         }
 
         VMManager vmm = new VMManager();
         System.out.println("\n[INFO] Start checking VM status...");
-        for (var id : instanceId) {
+        for (var id : instancesId) {
             vmm.monitoringVMStatus(id);
         }
-        return instanceId;
+        return instancesId;
     }
 }

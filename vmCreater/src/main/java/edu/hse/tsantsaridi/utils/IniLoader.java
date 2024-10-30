@@ -20,6 +20,7 @@ public class IniLoader {
     private static final String NAT_INSTANCE = "NAT_INSTANCE";
     private static final String NAT_ROUTE_TABLE = "NAT_ROUTE_TABLE";
     private static final String NAT_SECURITY_GROUP = "NAT_SECURITY_GROUP";
+    private static final String PORT_FORWARDING = "PORT_FORWARDING";
 
     private final Ini ini;
 
@@ -35,6 +36,7 @@ public class IniLoader {
         if (ini.containsKey(NAT_PUBLIC_SUBNET)) {nat.setPublicSubnet(new SubNet(ini.get(NAT_PUBLIC_SUBNET)));}
         if (ini.containsKey(NAT_ROUTE_TABLE)) {nat.setRouteTable(new RouteTable(ini.get(NAT_ROUTE_TABLE)));}
         if (ini.containsKey(NAT_SECURITY_GROUP)) {nat.setSecurityConf(new SecurityConf(ini.get(NAT_SECURITY_GROUP)));}
+        if (ini.containsKey(PORT_FORWARDING)) {nat.setPortForwarding(new PortForwarding(ini.get(PORT_FORWARDING)));}
         if (ini.containsKey(NAT_INSTANCE)) {nat.setNatInstance(new VM(ini.get(NAT_INSTANCE)));}
 
         return nat;

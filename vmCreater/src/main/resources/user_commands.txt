@@ -1,15 +1,18 @@
-sudo apt-get update
-sudo apt-get install -y openvpn easy-rsa make
-cp -r /usr/share/easy-rsa ~/openvpn-ca
-cd ~/openvpn-ca && ln -s openssl-1.0.0.cnf openssl.cnf
-touch ~/.rnd
-cd ~/openvpn-ca && . ./vars && ./clean-all && ./build-ca --batch
-cd ~/openvpn-ca && . ./vars && ./build-key-server --batch server
-cd ~/openvpn-ca && . ./vars && ./build-dh
-cd ~/openvpn-ca && . ./vars && openvpn --genkey --secret keys/ta.key
-cd ~/openvpn-ca && . ./vars && ./build-key --batch client1
-sudo mkdir -p /etc/openvpn
-sudo cp ~/openvpn-ca/keys/ca.crt ~/openvpn-ca/keys/server.crt ~/openvpn-ca/keys/server.key ~/openvpn-ca/keys/ta.key ~/openvpn-ca/keys/dh2048.pem /etc/openvpn
-echo 'port 1194\nproto udp\ndev tun\nca /etc/openvpn/ca.crt\ncert /etc/openvpn/server.crt\nkey /etc/openvpn/server.key\ndh /etc/openvpn/dh2048.pem\ntopology subnet\nserver 10.8.0.0 255.255.255.0\nkeepalive 10 120\npersist-key\npersist-tun\nuser nobody\ngroup nogroup\nstatus /var/log/openvpn-status.log\nlog-append /var/log/openvpn.log\nverb 3' | sudo tee /etc/openvpn/server.conf
-sudo systemctl start openvpn@server
-sudo systemctl status openvpn@server
+#!/bin/bash
+
+# Замените на ваши значения
+NAT_IP="<NAT_PUBLIC_IP>"
+NAT_USER="lena"
+NAT_PRIVATE_KEY="C:/Users/User/.ssh/id_rsa"
+VM_PRIVATE_IP="<VM_PRIVATE_IP>"
+VM_USER="lena"
+
+ssh -i "$NAT_PRIVATE_KEY" -o ProxyCommand="ssh -i $NAT_PRIVATE_KEY -W %h:%p $NAT_USER@$NAT_IP" $VM_USER@$VM_PRIVATE_IP << 'EOF'
+sudo apt update
+sudo apt install -y nginx
+
+sudo systemctl start nginx
+sudo systemctl enable nginx
+sudo systemctl status nginx
+
+EOF

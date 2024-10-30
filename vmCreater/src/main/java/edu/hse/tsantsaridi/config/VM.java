@@ -17,6 +17,7 @@ public class VM {
     // в гигабайтах
     private int diskSize;
     private String sshKeyPublicPath;
+    private String sshKeyPrivatePath;
     private String imageStandard;
     private String imageId;
     private String imageFamily;
@@ -37,6 +38,7 @@ public class VM {
         setImageFamily(section.get("image_family"));
         setUserName(section.get("user_name"));
         setSshKeyPublicPath(section.get("path_public_ssh"));
+        setSshKeyPrivatePath(section.get("path_private_ssh"));
         setCommandsFilePath(section.get("commands_file_path"));
         setAssignPublicIp(true);
     }
@@ -153,5 +155,13 @@ public class VM {
 
     public void setImageId(String imageId) {
         this.imageId = imageId;
+    }
+
+    public String getSshKeyPrivatePath() {
+        return sshKeyPrivatePath;
+    }
+
+    public void setSshKeyPrivatePath(String sshKeyPrivatePath) {
+        this.sshKeyPrivatePath = sshKeyPrivatePath;
     }
 }

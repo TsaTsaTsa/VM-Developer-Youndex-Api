@@ -12,6 +12,7 @@ public class Nat {
     private VM natInstance;
     private SecurityConf securityConf;
     private RouteTable routeTable;
+    private PortForwarding portForwarding;
 
     public Network getNetwork() {
         return network;
@@ -59,5 +60,13 @@ public class Nat {
 
     public void setRouteTable(RouteTable routeTable) {
         this.routeTable = routeTable;
+    }
+
+    public PortForwarding getPortForwarding() {
+        return portForwarding;
+    }
+
+    public void setPortForwarding(PortForwarding portForwarding) {
+        this.portForwarding = portForwarding;
     }
 }

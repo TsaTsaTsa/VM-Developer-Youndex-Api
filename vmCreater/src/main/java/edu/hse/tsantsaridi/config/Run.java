@@ -18,11 +18,18 @@ public class Run {
         setCommands(section.get("commands"));
     }
 
-    public Run(String userName, String host, String ssh_path, String filePath) {
+    public Run(String userName, String host, String sshPrivatePath, String filePath) {
         setUserName(userName);
         setHost(host);
-        setSshPrivatePath(ssh_path);
+        setSshPrivatePath(sshPrivatePath);
         setCommands(filePath);
+    }
+
+    public Run(String userName, String host, String sshPrivatePath, List<String> commands) {
+        setUserName(userName);
+        setHost(host);
+        setSshPrivatePath(sshPrivatePath);
+        setCommands(commands);
     }
 
     public String getUserName() {
@@ -43,6 +50,10 @@ public class Run {
 
     public List<String> getCommands() {
         return commands;
+    }
+
+    private void setCommands(List<String> commands) {
+        this.commands = commands;
     }
 
     private void setCommands(String filePath) {

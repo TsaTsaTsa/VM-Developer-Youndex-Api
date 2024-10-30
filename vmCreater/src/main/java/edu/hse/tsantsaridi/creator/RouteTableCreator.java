@@ -18,7 +18,6 @@ public class RouteTableCreator {
         RouteTableServiceGrpc.RouteTableServiceBlockingStub routeTableService = authService.getFactory().create(RouteTableServiceGrpc.RouteTableServiceBlockingStub.class, RouteTableServiceGrpc::newBlockingStub);
 
         // Создание таблицы маршрутизации и добавление статического маршрута
-        System.out.println("Creating route table...");
         CreateRouteTableRequest routeTableRequest = CreateRouteTableRequest.newBuilder()
                 .setFolderId(generalConfig.getFolderId())
                 .setName(routeTableConf.getName())

@@ -2,7 +2,6 @@ package edu.hse.tsantsaridi;
 
 import edu.hse.tsantsaridi.auth.AuthService;
 import edu.hse.tsantsaridi.config.Configuration;
-import edu.hse.tsantsaridi.config.VM;
 import edu.hse.tsantsaridi.daployer.NatDeployer;
 import edu.hse.tsantsaridi.daployer.ScriptRunner;
 import edu.hse.tsantsaridi.daployer.VMDeployer;
@@ -27,15 +26,13 @@ public class App {
         authService = new AuthService();
 
         if (config.getNatConf() != null) {
+            System.out.println("[INFO] Start set up routing via Nat-instance");
             new NatDeployer().deploy(config);
-
-            if (config.getNatConf().getNatInstance().getCommandsFilePath() != null) {
-                VM natInstanceConf = config.getNatConf().getNatInstance();
-
-            }
         } else if (config.getVmConf() != null) {
+            System.out.println("[INFO] Start create VMs");
             new VMDeployer().deploy(config.getGeneralConf().getVmCount(), config.getGeneralConf(), config.getVmConf());
         } else if (config.getRunConf() != null) {
+            System.out.println("[INFO] Start run script");
             new ScriptRunner().runScript(config.getRunConf());
         }
     }

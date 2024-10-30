@@ -13,13 +13,14 @@ import net.schmizz.sshj.SSHClient;
 import net.schmizz.sshj.connection.channel.direct.Session;
 import net.schmizz.sshj.transport.verification.PromiscuousVerifier;
 import net.schmizz.sshj.userauth.keyprovider.KeyProvider;
+
 import java.io.InputStream;
 
 public class ScriptRunner {
     private static final int MAX_ATTEMPTS_COUNT = 5;
 
     public void runScript(Run runConfig) throws InterruptedException {
-        System.out.println("[INFO] Start running script...");
+        //System.out.println("[INFO] Start running script...");
         Path privateKeyPath = Paths.get(runConfig.getSshPrivatePath());
 
         System.out.println("[INFO] Try connecting to VM");
@@ -37,8 +38,8 @@ public class ScriptRunner {
                 ssh.authPublickey(runConfig.getUserName(), keyProvider);
 
                 List<String> commands = runConfig.getCommands();
-                try (Session session = ssh.startSession()) {
-                    for (String command : commands) {
+                for (String command : commands) {
+                    try (Session session = ssh.startSession()) {
                         Integer exitStatus = runCommand(command, session);
 
                         if (exitStatus != 0) {
@@ -54,8 +55,9 @@ public class ScriptRunner {
                     System.exit(0);
                 }
             }
+            TimeUnit.SECONDS.sleep(10);
         }
-        System.out.println("\n[INFO] Finished running script");
+        System.out.println("[INFO] Finished running script");
     }
 
     private Integer runCommand(String command, Session session) throws IOException {
@@ -65,7 +67,7 @@ public class ScriptRunner {
         Integer exitStatus = cmd.getExitStatus();
         if (exitStatus != null) {
             if (exitStatus == 0) {
-                System.out.println("\n[INFO] Command executed successfully: " + command);
+                System.out.println("[INFO] Command executed successfully: " + command);
                 printCommandOutput(cmd.getInputStream());
             } else {
                 System.out.println("\n[INFO] Command failed, exit status: " + exitStatus + ", command: " + command);
