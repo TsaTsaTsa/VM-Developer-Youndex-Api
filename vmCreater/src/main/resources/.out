@@ -53,9 +53,9 @@
 -------------------------------------------------------
 Port Forwarding Summary:
 External Port: 20001 -> Internal: 10.128.2.27:80
-External Port: 21001 -> Internal: 10.128.2.27:443
+External Port: 20002 -> Internal: 10.128.2.27:443
 External Port: 20011 -> Internal: 10.128.2.32:80
-External Port: 21011 -> Internal: 10.128.2.32:443
+External Port: 20012 -> Internal: 10.128.2.32:443
 -------------------------------------------------------
 
 [INFO] Routing through the NAT instance is configured successfully
