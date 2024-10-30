@@ -1,61 +1,63 @@
 [INFO] Configuration has been successfully loaded
 [INFO] Start set up routing via Nat-instance
-[INFO] Network my-vpc with ID: enpejp483215019vhe2h created successfully
-[INFO] Subnet private-subnet with ID: e2l6builpsi6ud78v3j6 created successfully
-[INFO] Subnet public-subnet with ID: e2lo57023ij1c6ho291s created successfully
+[INFO] Network my-vpc with ID: enpqrjj49itk30c8bjl3 created successfully
+[INFO] Subnet private-subnet with ID: e2lqkp7smmblc68jaijs created successfully
+[INFO] Subnet public-subnet with ID: e2lsdvjaid7jni1sj8kl created successfully
 [INFO] Security group rule any added successfully
 [INFO] Security group rule ssh added successfully
 [INFO] Security group rule ext-http added successfully
 [INFO] Security group rule ext-https added successfully
-[INFO] Security group nat-instance-sg with ID: enp2atm3hn9jea7q30gd created successfully
+[INFO] Security group nat-instance-sg with ID: enp83uhjarm4p86ljnl9 created successfully
 -------------------------------------------------------
 [INFO] Creating VM with private IP...
-[INFO] Start creating VM...
-[INFO] Create instance request sent
-[INFO] Wait for instance creation..
-[INFO] VM with ID epd07gsdlmki62vg2k8p created successfully[INFO] Start creating VM...
 
 [INFO] Start creating VM...
 [INFO] Create instance request sent
 [INFO] Wait for instance creation..
-[INFO] VM with ID epducje0806gi4ju37uj created successfully
+[INFO] VM with ID epdv5m4aebdpjjh3mbhp created successfully
+
+[INFO] Start creating VM...
+[INFO] Create instance request sent
+[INFO] Wait for instance creation..
+[INFO] VM with ID epd3qg8i5oo6qh01g98b created successfully
 
 [INFO] Start checking VM status...
-[INFO] VM ID: epd07gsdlmki62vg2k8p, Name: vm-prefix-e7ff3a38-93bd-490c-ab23-b76c7af30830, Status: RUNNING
-[INFO] VM ID: epducje0806gi4ju37uj, Name: vm-prefix-88eff536-ca8b-4a72-92ab-0cdd141c6f58, Status: RUNNING
+[INFO] VM ID: epdv5m4aebdpjjh3mbhp, Name: vm-prefix-1d053f73-4f31-4ad2-aca3-aa1451b53bc9, Status: RUNNING
+[INFO] VM ID: epd3qg8i5oo6qh01g98b, Name: vm-prefix-e2c1918a-7960-4919-a3a2-1306d80c7520, Status: RUNNING
 -------------------------------------------------------
 [INFO] Creating Nat-instance...
+
 [INFO] Start creating VM...
 [INFO] Create instance request sent
 [INFO] Wait for instance creation..
-[INFO] VM with ID epd9lphr6hol3h15215j created successfully
+[INFO] VM with ID epdfvt4s14ahh6l8ha57 created successfully
 
 [INFO] Start checking VM status...
-[INFO] VM ID: epd9lphr6hol3h15215j, Name: nat-instance-c788de5a-1a77-4353-9947-f8921081fa73, Status: RUNNING
+[INFO] VM ID: epdfvt4s14ahh6l8ha57, Name: nat-instance-5844fcf4-ad5a-43e5-ba0b-f3de3f760f46, Status: RUNNING
 -------------------------------------------------------
 [INFO] Creating route table...
-[INFO] Route table nat-instance-route with ID: enpn4fiaceku82co4fap created successfully
+[INFO] Route table nat-instance-route with ID: enp6sf9pmu99ld0lnbgm created successfully
 -------------------------------------------------------
 [INFO] Attaching route table to private subnet...
-[INFO] Route table enpn4fiaceku82co4fap attached to subnet e2l6builpsi6ud78v3j6 successfully
+[INFO] Route table enp6sf9pmu99ld0lnbgm attached to subnet e2lqkp7smmblc68jaijs successfully
 -------------------------------------------------------
 [INFO] Start port forwarding process...
 [INFO] Try connecting to VM
-[INFO] Command executed successfully: sudo iptables -t nat -A PREROUTING -p tcp --dport 20001 -j DNAT --to-destination 10.128.2.27:80
-[INFO] Command executed successfully: sudo iptables -t nat -A POSTROUTING -s 10.128.2.27 -o eth0 -j MASQUERADE
-[INFO] Command executed successfully: sudo iptables -t nat -A PREROUTING -p tcp --dport 21001 -j DNAT --to-destination 10.128.2.27:443
-[INFO] Command executed successfully: sudo iptables -t nat -A POSTROUTING -s 10.128.2.27 -o eth0 -j MASQUERADE
-[INFO] Command executed successfully: sudo iptables -t nat -A PREROUTING -p tcp --dport 20011 -j DNAT --to-destination 10.128.2.32:80
-[INFO] Command executed successfully: sudo iptables -t nat -A POSTROUTING -s 10.128.2.32 -o eth0 -j MASQUERADE
-[INFO] Command executed successfully: sudo iptables -t nat -A PREROUTING -p tcp --dport 21011 -j DNAT --to-destination 10.128.2.32:443
-[INFO] Command executed successfully: sudo iptables -t nat -A POSTROUTING -s 10.128.2.32 -o eth0 -j MASQUERADE
+[INFO] Command executed successfully: sudo iptables -t nat -A PREROUTING -p tcp --dport 20001 -j DNAT --to-destination 10.128.2.3:80
+[INFO] Command executed successfully: sudo iptables -t nat -A POSTROUTING -s 10.128.2.3 -o eth0 -j MASQUERADE
+[INFO] Command executed successfully: sudo iptables -t nat -A PREROUTING -p tcp --dport 21001 -j DNAT --to-destination 10.128.2.3:443
+[INFO] Command executed successfully: sudo iptables -t nat -A POSTROUTING -s 10.128.2.3 -o eth0 -j MASQUERADE
+[INFO] Command executed successfully: sudo iptables -t nat -A PREROUTING -p tcp --dport 20002 -j DNAT --to-destination 10.128.2.23:80
+[INFO] Command executed successfully: sudo iptables -t nat -A POSTROUTING -s 10.128.2.23 -o eth0 -j MASQUERADE
+[INFO] Command executed successfully: sudo iptables -t nat -A PREROUTING -p tcp --dport 21002 -j DNAT --to-destination 10.128.2.23:443
+[INFO] Command executed successfully: sudo iptables -t nat -A POSTROUTING -s 10.128.2.23 -o eth0 -j MASQUERADE
 [INFO] Finished running script
 -------------------------------------------------------
 Port Forwarding Summary:
-External Port: 20001 -> Internal: 10.128.2.27:80
-External Port: 20002 -> Internal: 10.128.2.27:443
-External Port: 20011 -> Internal: 10.128.2.32:80
-External Port: 20012 -> Internal: 10.128.2.32:443
+External Port: 20001 -> Internal: 10.128.2.3:80
+External Port: 21001 -> Internal: 10.128.2.3:443
+External Port: 20002 -> Internal: 10.128.2.23:80
+External Port: 21002 -> Internal: 10.128.2.23:443
 -------------------------------------------------------
 
 [INFO] Routing through the NAT instance is configured successfully
