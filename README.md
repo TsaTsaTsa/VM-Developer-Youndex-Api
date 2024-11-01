@@ -75,7 +75,8 @@ image_standard=standard-images
 image_family=ubuntu-1804
 user_name=lena
 path_public_ssh=C:/Users/User/.ssh/id_rsa.pub
-path_private_ssh=```
+path_private_ssh=
+```
 
 ### 2. Создание Виртуальных Машин с Публичными IP
 ```ini
