@@ -96,7 +96,7 @@ path_private_ssh=
 ### 2. Создание Виртуальных Машин с Публичными IP
 ```ini
 [GENERAL]
-folder_id=b1gbssc7fd3bno967hd8
+folder_name=new_folder // либо folder_id=<id cуществующего каталога> 
 zone_id=ru-central1-b
 vm_count=2
 
