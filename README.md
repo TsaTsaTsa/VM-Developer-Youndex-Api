@@ -121,4 +121,5 @@ commands=src/main/resources/user_commands.txt
 
 ## Переменные Окружения
 
-- `OAUTH_TOKEN`: Токен для аутентификации в Yandex Cloud API.
+- `OAUTH_TOKEN`: токен для аутентификации в Yandex Cloud API;
+- `CLOUD_ID`: id рабочего облака – в нем будут создаваться новые каталоги.
